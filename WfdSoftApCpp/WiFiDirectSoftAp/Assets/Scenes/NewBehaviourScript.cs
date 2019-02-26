@@ -7,7 +7,7 @@ using UnityEngine;
 
 public delegate void SoftApEvent();
 public delegate void DeviceConnectedEvent(String LocalAddress, String RemoteAddress);
-public delegate void DeviceDisconnectedEvent();
+public delegate void DeviceDisconnectedEvent(String LocalAddress, String RemoteAddress);
 
 internal class SoftAp
 {
@@ -189,7 +189,12 @@ internal class SoftAp
 
     private void DeviceDisconnected(IntPtr Ap, IntPtr Device)
     {
-        DoDeviceDisconnected();
+        String LocalAddress;
+        GetDeviceLocalMac(Device, out LocalAddress);
+        String RemoteAddress;
+        GetDeviceRemoteMac(Device, out RemoteAddress);
+
+        DoDeviceDisconnected(LocalAddress, RemoteAddress);
     }
 
     private void ApStarted(IntPtr Ap)
@@ -231,10 +236,10 @@ internal class SoftAp
             OnDeviceConnected(LoadAddres, RemoteAddress);
     }
 
-    protected virtual void DoDeviceDisconnected()
+    protected virtual void DoDeviceDisconnected(String LoadAddres, String RemoteAddress)
     {
         if (OnDeviceDisconnected != null)
-            OnDeviceDisconnected();
+            OnDeviceDisconnected(LoadAddres, RemoteAddress);
     }
     #endregion
 
@@ -355,9 +360,11 @@ public class NewBehaviourScript : MonoBehaviour
         Ap.Start();
 	}
 
-    private void Ap_OnDeviceDisconnected()
+    private void Ap_OnDeviceDisconnected(string LocalAddress, string RemoteAddress)
     {
         Debug.Log("Device disconnected");
+        Debug.Log("  Local Address: " + LocalAddress);
+        Debug.Log("  Remote Address: " + RemoteAddress);
     }
 
     private void Ap_OnDeviceConnected(string LocalAddress, string RemoteAddress)

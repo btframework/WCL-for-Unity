@@ -646,6 +646,16 @@ public class BluetoothManager : BluetoothImports
     private static extern Int32 RadioSetDiscoverable(
         [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Radio,
         [param: MarshalAs(UnmanagedType.Bool), In] Boolean Discoverable);
+
+    [DllImport(RfCommClientDllName, CallingConvention = CallingConvention.StdCall)]
+    [return: MarshalAs(UnmanagedType.I4)]
+    private static extern Int32 RadioTurnOn(
+        [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Radio);
+
+    [DllImport(RfCommClientDllName, CallingConvention = CallingConvention.StdCall)]
+    [return: MarshalAs(UnmanagedType.I4)]
+    private static extern Int32 RadioTurnOff(
+        [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Radio);
     #endregion
 
     // Bluetooth Manager instance.
@@ -952,6 +962,22 @@ public class BluetoothManager : BluetoothImports
             throw new ObjectDisposedException(this.ToString());
 
         return RadioSetDiscoverable(Radio, Discoverable);
+    }
+
+    public Int32 TurnOn(IntPtr Radio)
+    {
+        if (Disposed)
+            throw new ObjectDisposedException(this.ToString());
+
+        return RadioTurnOn(Radio);
+    }
+
+    public Int32 TurnOff(IntPtr Radio)
+    {
+        if (Disposed)
+            throw new ObjectDisposedException(this.ToString());
+
+        return RadioTurnOff(Radio);
     }
     #endregion
 

@@ -5,13 +5,13 @@
 #include "combaseapi.h"
 
 // Change the lines below to provide path to the Bluetooth Framework headers.
-#include "..\..\..\WCL7\CPP\Source\Bluetooth\wclBluetooth.h"
-#include "..\..\..\WCL7\CPP\Source\Common\wclErrors.h"
+#include "..\..\..\..\..\WCL7\CPP\Source\Bluetooth\wclBluetooth.h"
+#include "..\..\..\..\..\WCL7\CPP\Source\Common\wclErrors.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
 // Change the line below to provide path to the Bluetooth Framework lib.
-#pragma comment(lib, "..\\..\\..\\WCL7\\CPP\\Lib\\2017\\x64\\wclBluetoothFramework.lib")
+#pragma comment(lib, "..\\..\\..\\..\\..\\WCL7\\CPP\\Lib\\2017\\x64\\wclBluetoothFramework.lib")
 
 using namespace wclCommon;
 using namespace wclCommunication;
@@ -449,6 +449,20 @@ extern "C"
 		if (Radio == NULL)
 			return WCL_E_INVALID_ARGUMENT;
 		return Radio->SetDiscoverable(Discoverable);
+	}
+
+	__declspec(dllexport) int __stdcall RadioTurnOn(CwclBluetoothRadio* Radio)
+	{
+		if (Radio == NULL)
+			return WCL_E_INVALID_ARGUMENT;
+		return Radio->TurnOn();
+	}
+
+	__declspec(dllexport) int __stdcall RadioTurnOff(CwclBluetoothRadio* Radio)
+	{
+		if (Radio == NULL)
+			return WCL_E_INVALID_ARGUMENT;
+		return Radio->TurnOff();
 	}
 }
 

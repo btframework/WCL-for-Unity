@@ -852,14 +852,14 @@ public class GattClient : BluetoothImports
     [return: MarshalAs(UnmanagedType.I4)]
     private static extern Int32 GattClientGetServices(
         [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Client,
-        [param: Out] out GattServices Services);
+        [param: In, Out] ref GattServices Services);
 
     [DllImport(WclGattClientDllName, CallingConvention = CallingConvention.StdCall)]
     [return: MarshalAs(UnmanagedType.I4)]
     private static extern Int32 GattClientGetCharas(
         [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Client,
         [param: In] ref GattService Service,
-        [param: Out] out GattCharacteristics Chars);
+        [param: In, Out] ref GattCharacteristics Chars);
 
     [DllImport(WclGattClientDllName, CallingConvention = CallingConvention.StdCall)]
     [return: MarshalAs(UnmanagedType.I4)]
@@ -995,7 +995,11 @@ public class GattClient : BluetoothImports
         if (Disposed)
             throw new ObjectDisposedException(this.ToString());
 
-        return GattClientGetServices(FClient, out Services);
+        Services = new GattServices();
+        Services.Count = 0;
+        Services.Services = new GattService[255];
+
+        return GattClientGetServices(FClient, ref Services);
     }
 
     public Int32 GetCharacteristics(GattService Service, out GattCharacteristics Chars)
@@ -1003,7 +1007,11 @@ public class GattClient : BluetoothImports
         if (Disposed)
             throw new ObjectDisposedException(this.ToString());
 
-        return GattClientGetCharas(FClient, ref Service, out Chars);
+        Chars = new GattCharacteristics();
+        Chars.Count = 0;
+        Chars.Chars = new GattCharacteristic[255];
+
+        return GattClientGetCharas(FClient, ref Service, ref Chars);
     }
 
     public Int32 Subscribe(GattCharacteristic Char)

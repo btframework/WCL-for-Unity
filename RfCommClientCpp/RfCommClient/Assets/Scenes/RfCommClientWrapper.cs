@@ -441,6 +441,15 @@ public abstract class BluetoothImports : IDisposable
     }
 };
 
+public struct BluetoothService
+{
+    public UInt32 Handle;
+    public Guid Uuid;
+    public Byte Channel;
+    public String Name;
+    public String Comment;
+};
+
 #region Bluetooth Manager delegates
 public delegate void DeviceFoundEvent(System.Object sender, IntPtr Radio, Int64 Address);
 public delegate void DiscoveringStartedEvent(System.Object sender, IntPtr Radio);
@@ -686,6 +695,47 @@ public class BluetoothManager : BluetoothImports
     [return: MarshalAs(UnmanagedType.I4)]
     private static extern Int32 RadioTurnOff(
         [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Radio);
+
+    [DllImport(RfCommClientDllName, CallingConvention = CallingConvention.StdCall)]
+    [return: MarshalAs(UnmanagedType.I4)]
+    private static extern Int32 RadioEnumRemoteServices(
+        [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Radio,
+        [param: MarshalAs(UnmanagedType.I8), In] Int64 Address,
+        [param: MarshalAs(UnmanagedType.SysInt), Out] out IntPtr Services);
+
+    [DllImport(RfCommClientDllName, CallingConvention = CallingConvention.StdCall)]
+    private static extern void RadioDestroyServices(
+        [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Services);
+
+    [DllImport(RfCommClientDllName, CallingConvention = CallingConvention.StdCall)]
+    [return: MarshalAs(UnmanagedType.U4)]
+    private static extern UInt32 RadioGetServicesCount(
+        [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Services);
+
+    [DllImport(RfCommClientDllName, CallingConvention = CallingConvention.StdCall)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern Boolean RadioGetService(
+        [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Services,
+        [param: MarshalAs(UnmanagedType.U4), In] UInt32 ndx,
+        [param: MarshalAs(UnmanagedType.U4), Out] out UInt32 Handle,
+        [Out] out Guid Uuid,
+        [param: MarshalAs(UnmanagedType.U1), Out] out Byte Channel);
+
+    [DllImport(RfCommClientDllName, CallingConvention = CallingConvention.StdCall)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern Boolean RadioGetServiceName(
+        [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Services,
+        [param: MarshalAs(UnmanagedType.U4), In] UInt32 ndx,
+        [param: MarshalAs(UnmanagedType.U4), In, Out] ref UInt32 Len,
+        [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr pName);
+
+    [DllImport(RfCommClientDllName, CallingConvention = CallingConvention.StdCall)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern Boolean RadioGetServiceComment(
+        [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Services,
+        [param: MarshalAs(UnmanagedType.U4), In] UInt32 ndx,
+        [param: MarshalAs(UnmanagedType.U4), In, Out] ref UInt32 Len,
+        [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr pComment);
     #endregion
 
     // Bluetooth Manager instance.
@@ -1008,6 +1058,60 @@ public class BluetoothManager : BluetoothImports
             throw new ObjectDisposedException(this.ToString());
 
         return RadioTurnOff(Radio);
+    }
+
+    public Int32 EnumRemoteServices(IntPtr Radio, Int64 Address, out BluetoothService[] Services)
+    {
+        if (Disposed)
+            throw new ObjectDisposedException(this.ToString());
+
+        Services = null;
+
+        IntPtr pServices = IntPtr.Zero;
+        Int32 Result = RadioEnumRemoteServices(Radio, Address, out pServices);
+        if (Result == BluetoothErrors.WCL_E_SUCCESS)
+        {
+            if (pServices != IntPtr.Zero)
+            {
+                UInt32 Cnt = RadioGetServicesCount(pServices);
+                if (Cnt > 0)
+                {
+                    Services = new BluetoothService[Cnt];
+
+                    for (UInt32 i = 0; i < Cnt; i++)
+                    {
+                        BluetoothService Service = new BluetoothService();
+
+                        if (RadioGetService(pServices, i, out Service.Handle, out Service.Uuid, out Service.Channel))
+                        {
+                            UInt32 Len = 0;
+                            Boolean bRes = RadioGetServiceName(pServices, i, ref Len, IntPtr.Zero);
+                            if (bRes && Len > 0)
+                            {
+                                IntPtr pName = Marshal.AllocHGlobal((int)(Len + 1) * sizeof(Char));
+                                Service.Name = Marshal.PtrToStringUni(pName);
+                                Marshal.FreeHGlobal(pName);
+                            }
+
+                            Len = 0;
+                            bRes = RadioGetServiceComment(pServices, i, ref Len, IntPtr.Zero);
+                            if (bRes && Len > 0)
+                            {
+                                IntPtr pComment = Marshal.AllocHGlobal((int)(Len + 1) * sizeof(Char));
+                                Service.Comment = Marshal.PtrToStringUni(pComment);
+                                Marshal.FreeHGlobal(pComment);
+                            }
+                        }
+
+                        Services[i] = Service;
+                    }
+                }
+
+                RadioDestroyServices(pServices);
+            }
+        }
+
+        return Result;
     }
     #endregion
 
@@ -1506,6 +1610,36 @@ public class RfCommClientWrapper : MonoBehaviour
     private Boolean FFirstAttempt = false; // Used during connection.
 
     #region Some helper methods
+    // Enumerates services of given device.
+    private void EnumServices(IntPtr Radio, Int64 Address)
+    {
+        BluetoothService[] Services;
+        Int32 Res = FManager.EnumRemoteServices(Radio, Address, out Services);
+        if (Res != BluetoothErrors.WCL_E_SUCCESS)
+            Debug.Log("Failed to enumerate services of device " + Address.ToString("X12") + ". Error: 0x" + Res.ToString("X8"));
+        else
+        {
+            if (Services == null)
+                Debug.Log("No services were found");
+            else
+            {
+                if (Services.Length == 0)
+                    Debug.Log("No services were found");
+                else
+                {
+                    Debug.Log("Found " + Services.Length.ToString() + " services");
+                    foreach (BluetoothService Service in Services)
+                    {
+                        Debug.Log("Handle: " + Service.Handle.ToString());
+                        Debug.Log("UUID: " + Service.Uuid.ToString());
+                        Debug.Log("Name: " + Service.Name);
+                        Debug.Log("Comment: " + Service.Comment);
+                    }
+                }
+            }
+        }
+    }
+
     // Returns TRUE if device was found. FALSE otherwise. It allows us to rediscover device if it was not found.
     private Boolean TryToConnect(IntPtr Radio)
     {
@@ -1564,6 +1698,9 @@ public class RfCommClientWrapper : MonoBehaviour
         Debug.Log("Device found: " + Address.ToString("X12"));
         // Add device into found devices list.
         FDevices.Add(Address);
+
+        // Enum services of just found device.
+        EnumServices(Radio, Address);
     }
 
     private void FManager_OnDiscoveringCompleted(object sender, IntPtr Radio, int Error)

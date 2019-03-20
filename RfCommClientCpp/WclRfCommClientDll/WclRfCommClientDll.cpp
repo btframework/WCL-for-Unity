@@ -365,7 +365,7 @@ extern "C"
 		return Radio->GetAvailable();
 	}
 
-	__declspec(dllexport) int __stdcall RadioGetDeviceName(CwclBluetoothRadio* Radio, __int64 Address, LPTSTR Name, int Len)
+	__declspec(dllexport) int __stdcall RadioGetDeviceName(CwclBluetoothRadio* Radio, __int64 Address, LPWSTR Name, int Len)
 	{
 		if (Radio == NULL || Name == NULL || Len == 0)
 			return WCL_E_INVALID_ARGUMENT;
@@ -463,6 +463,96 @@ extern "C"
 		if (Radio == NULL)
 			return WCL_E_INVALID_ARGUMENT;
 		return Radio->TurnOff();
+	}
+
+	__declspec(dllexport) int __stdcall RadioEnumRemoteServices(CwclBluetoothRadio* Radio, __int64 Address,
+		wclBluetoothServices** Services)
+	{
+		*Services = new wclBluetoothServices();
+		int Res = Radio->EnumRemoteServices(Address, NULL, (**Services));
+		if (Res != WCL_E_SUCCESS)
+		{
+			delete *Services;
+			*Services = NULL;
+		}
+		return Res;
+	}
+
+	__declspec(dllexport) void __stdcall RadioDestroyServices(wclBluetoothServices* Services)
+	{
+		if (Services != NULL)
+			delete Services;
+	}
+
+	__declspec(dllexport) unsigned long __stdcall RadioGetServicesCount(wclBluetoothServices* Services)
+	{
+		if (Services != NULL)
+			return (unsigned long)Services->size();
+		return 0;
+	}
+
+	__declspec(dllexport) BOOL __stdcall RadioGetService(wclBluetoothServices* Services, unsigned long ndx,
+		unsigned long* Handle, GUID* Uuid, unsigned char* Channel)
+	{
+		if (Services == NULL)
+			return FALSE;
+		if (ndx >= Services->size())
+			return FALSE;
+
+		wclBluetoothService Service = Services->at(ndx);
+		*Handle = Service.Handle;
+		*Uuid = Service.Uuid;
+		*Channel = Service.Channel;
+
+		return TRUE;
+	}
+
+	__declspec(dllexport) BOOL __stdcall RadioGetServiceName(wclBluetoothServices* Services, unsigned long ndx,
+		unsigned long* Len, LPWSTR pName)
+	{
+		if (Services == NULL)
+			return FALSE;
+		if (ndx >= Services->size())
+			return FALSE;
+
+		wclBluetoothService Service = Services->at(ndx);
+		if (pName == NULL)
+			*Len = (unsigned long)Service.Name.length();
+		else
+		{
+			unsigned long l = (unsigned long)Service.Name.length();
+			if (l > *Len)
+				l = *Len;
+			else
+				*Len = l;
+			wcscpy_s(pName, l, Service.Name.c_str());
+		}
+
+		return TRUE;
+	}
+
+	__declspec(dllexport) BOOL __stdcall RadioGetServiceComment(wclBluetoothServices* Services, unsigned long ndx,
+		unsigned long* Len, LPWSTR pComment)
+	{
+		if (Services == NULL)
+			return FALSE;
+		if (ndx >= Services->size())
+			return FALSE;
+
+		wclBluetoothService Service = Services->at(ndx);
+		if (pComment == NULL)
+			*Len = (unsigned long)Service.Comment.length();
+		else
+		{
+			unsigned long l = (unsigned long)Service.Comment.length();
+			if (l > *Len)
+				l = *Len;
+			else
+				*Len = l;
+			wcscpy_s(pComment, l, Service.Comment.c_str());
+		}
+
+		return TRUE;
 	}
 }
 

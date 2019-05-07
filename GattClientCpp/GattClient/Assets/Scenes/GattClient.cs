@@ -447,6 +447,17 @@ public delegate void DiscoveringStartedEvent(System.Object sender, IntPtr Radio)
 public delegate void DiscoveringCompletedEvent(System.Object sender, IntPtr Radio, Int32 Error);
 #endregion
 
+public enum WinVer
+{
+    verUnknown = 1,
+    verWinXP = 2,
+    verWinVista = 3,
+    verWin7 = 4,
+    verWin8 = 5,
+    verWin81 = 6,
+    verWin10 = 7
+};
+
 public class BluetoothManager : BluetoothImports
 {
     #region Bluetooth Manager callback types
@@ -550,6 +561,16 @@ public class BluetoothManager : BluetoothImports
         [param: MarshalAs(UnmanagedType.I8), In] Int64 Address,
         [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Name,
         [param: MarshalAs(UnmanagedType.I4), In] Int32 Len);
+
+    [DllImport(WclGattClientDllName, CallingConvention = CallingConvention.StdCall)]
+    [return: MarshalAs(UnmanagedType.I4)]
+    private static extern Int32 RadioRemoteUnpair(
+        [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Radio,
+        [param: MarshalAs(UnmanagedType.I8), In] Int64 Address);
+
+    [DllImport(WclGattClientDllName, CallingConvention = CallingConvention.StdCall)]
+    private static extern WinVer GetWinVer(
+        [param: MarshalAs(UnmanagedType.U2), Out] out UInt16 Build);
     #endregion
 
     // Bluetooth Manager instance.
@@ -714,6 +735,19 @@ public class BluetoothManager : BluetoothImports
 
         return Result;
     }
+
+    public Int32 RemoteUnpair(IntPtr Radio, Int64 Address)
+    {
+        if (Disposed)
+            throw new ObjectDisposedException(this.ToString());
+
+        return RadioRemoteUnpair(Radio, Address);
+    }
+
+    public static WinVer GetWindowsVersion(out UInt16 Build)
+    {
+        return GetWinVer(out Build);
+    }
     #endregion
 
     #region Bluetooth Manager properties
@@ -812,6 +846,32 @@ public struct GattCharacteristics
     public Byte Count;
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 255)]
     public GattCharacteristic[] Chars;
+};
+#endregion
+
+#region GATT Enumerations
+public enum ClientState
+{
+    csDisconnected,
+    csPreparing,
+    csConnecting,
+    csConnected,
+    csDisconnecting
+};
+
+public enum GattOperationFlag
+{
+    goNone,
+    goReadFromDevice,
+    goReadFromCache
+};
+
+public enum GattProtectionLevel
+{
+    plNone,
+    plAuthentication,
+    plEncryption,
+    plEncryptionAndAuthentication
 };
 #endregion
 
@@ -922,8 +982,21 @@ public class GattClient : BluetoothImports
     [DllImport(WclGattClientDllName, CallingConvention = CallingConvention.StdCall)]
     private static extern void GattClientFreeMem(
         [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr pMem);
+
+    [DllImport(WclGattClientDllName, CallingConvention = CallingConvention.StdCall)]
+    private static extern ClientState GattClientGetState(
+        [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Client);
+
+    [DllImport(WclGattClientDllName, CallingConvention = CallingConvention.StdCall)]
+    [return: MarshalAs(UnmanagedType.I4)]
+    private static extern Int32 GattClientWriteClientConfiguration(
+        [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr ClientClient,
+        [param: In] ref GattCharacteristic Char,
+        [param: MarshalAs(UnmanagedType.Bool), In] Boolean Subscribe,
+        [param: In] GattOperationFlag Flag,
+        [param: In] GattProtectionLevel Protection);
     #endregion
-    
+
     // GATT Client instance.
     private IntPtr FClient;
 
@@ -1093,6 +1166,28 @@ public class GattClient : BluetoothImports
         Int32 Res = GattClientWriteCharacteristicValue(FClient, ref Char, pValue, (UInt32)Value.Length);
         Marshal.FreeHGlobal(pValue);
         return Res;
+    }
+
+    public Int32 WriteClientConfiguration(GattCharacteristic Char, Boolean Subscribe,
+        GattOperationFlag Flag, GattProtectionLevel Protection)
+    {
+        if (Disposed)
+            throw new ObjectDisposedException(this.ToString());
+
+        return GattClientWriteClientConfiguration(FClient, ref Char, Subscribe, Flag, Protection);
+    }
+    #endregion
+
+    #region GATT client properties
+    public ClientState State
+    {
+        get
+        {
+            if (Disposed)
+                throw new ObjectDisposedException(this.ToString());
+
+            return GattClientGetState(FClient);
+        }
     }
     #endregion
 

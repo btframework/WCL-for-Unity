@@ -13,161 +13,147 @@ internal class SoftAp
 {
     #region Event delegates
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-    private delegate void DEVICE_EVENT(IntPtr Ap, IntPtr Device);
+    private delegate void DEVICE_EVENT(
+        [MarshalAs(UnmanagedType.SysInt), In] IntPtr Ap,
+        [MarshalAs(UnmanagedType.SysInt), In] IntPtr Device);
+
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-    private delegate void AP_EVENT(IntPtr Ap);
+    private delegate void AP_EVENT(
+        [MarshalAs(UnmanagedType.SysInt), In] IntPtr Ap);
     #endregion
 
-    private const String Dll32 = "..\\..\\..\\WfdDll\\WfdDll\\build\\WfdDll32.dll";
-    private const String Dll64 = "..\\..\\..\\WfdDll\\WfdDll\\build\\WfdDll64.dll";
+    private const String DllName = "..\\..\\..\\WfdDll\\WfdDll\\build\\WfdDll64.dll";
 
     #region Function imports
-    [DllImport(Dll32, CallingConvention = CallingConvention.StdCall, EntryPoint = "CreateSoftAp")]
-    private static extern IntPtr CreateSoftAp32(AP_EVENT OnStarted, AP_EVENT OnStopped,
-        DEVICE_EVENT OnConnected, DEVICE_EVENT OnDisconnected);
-    [DllImport(Dll64, CallingConvention = CallingConvention.StdCall, EntryPoint = "CreateSoftAp")]
-    private static extern IntPtr CreateSoftAp64(AP_EVENT OnStarted, AP_EVENT OnStopped,
-        DEVICE_EVENT OnConnected, DEVICE_EVENT OnDisconnected);
+    [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+    [return: MarshalAs(UnmanagedType.SysInt)]
+    private static extern IntPtr CreateSoftAp(
+        [param: MarshalAs(UnmanagedType.FunctionPtr), In] AP_EVENT OnStarted,
+        [param: MarshalAs(UnmanagedType.FunctionPtr), In] AP_EVENT OnStopped,
+        [param: MarshalAs(UnmanagedType.FunctionPtr), In] DEVICE_EVENT OnConnected,
+        [param: MarshalAs(UnmanagedType.FunctionPtr), In] DEVICE_EVENT OnDisconnected);
 
-    [DllImport(Dll32, CallingConvention = CallingConvention.StdCall, EntryPoint = "DestroySoftAp")]
-    private static extern void DestroySoftAp32(IntPtr o);
-    [DllImport(Dll64, CallingConvention = CallingConvention.StdCall, EntryPoint = "DestroySoftAp")]
-    private static extern void DestroySoftAp64(IntPtr o);
+    [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+    private static extern void DestroySoftAp(
+        [MarshalAs(UnmanagedType.SysInt), In] IntPtr o);
 
-    [DllImport(Dll32, CallingConvention = CallingConvention.StdCall, EntryPoint = "StartSoftAp")]
-    private static extern Int32 StartSoftAp32(IntPtr o, [MarshalAs(UnmanagedType.LPWStr)] String Ssid,
+    [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+    [return: MarshalAs(UnmanagedType.I4)]
+    private static extern Int32 StartSoftAp(
+        [MarshalAs(UnmanagedType.SysInt), In] IntPtr o,
+        [MarshalAs(UnmanagedType.LPWStr)] String Ssid,
         [MarshalAs(UnmanagedType.LPWStr)] String Passphrase);
-    [DllImport(Dll64, CallingConvention = CallingConvention.StdCall, EntryPoint = "StartSoftAp")]
-    private static extern Int32 StartSoftAp64(IntPtr o, [MarshalAs(UnmanagedType.LPWStr)] String Ssid,
-        [MarshalAs(UnmanagedType.LPWStr)] String Passphrase);
 
-    [DllImport(Dll32, CallingConvention = CallingConvention.StdCall, EntryPoint = "StopSoftAp")]
-    private static extern Int32 StopSoftAp32(IntPtr o);
-    [DllImport(Dll64, CallingConvention = CallingConvention.StdCall, EntryPoint = "StopSoftAp")]
-    private static extern Int32 StopSoftAp64(IntPtr o);
+    [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+    [return: MarshalAs(UnmanagedType.I4)]
+    private static extern Int32 StopSoftAp(
+        [MarshalAs(UnmanagedType.SysInt), In] IntPtr o);
 
-    [DllImport(Dll32, CallingConvention = CallingConvention.StdCall, EntryPoint = "GetSoftApPassphrase")]
-    private static extern Int32 GetSoftApPassphrase32(IntPtr o, IntPtr pPassphrase);
-    [DllImport(Dll64, CallingConvention = CallingConvention.StdCall, EntryPoint = "GetSoftApPassphrase")]
-    private static extern Int32 GetSoftApPassphrase64(IntPtr o, IntPtr pPassphrase);
+    [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern Boolean GetSoftApActive(
+        [MarshalAs(UnmanagedType.SysInt), In] IntPtr o);
 
-    [DllImport(Dll32, CallingConvention = CallingConvention.StdCall, EntryPoint = "GetSoftApSsid")]
-    private static extern Int32 GetSoftApSsid32(IntPtr o, IntPtr pSsid);
-    [DllImport(Dll64, CallingConvention = CallingConvention.StdCall, EntryPoint = "GetSoftApSsid")]
-    private static extern Int32 GetSoftApSsid64(IntPtr o, IntPtr pSsid);
+    [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+    [return: MarshalAs(UnmanagedType.I4)]
+    private static extern Int32 DisconnectDevice(
+        [MarshalAs(UnmanagedType.SysInt), In] IntPtr o);
 
-    [DllImport(Dll32, CallingConvention = CallingConvention.StdCall, EntryPoint = "GetSoftApActive")]
-    private static extern Boolean GetSoftApActive32(IntPtr o);
-    [DllImport(Dll64, CallingConvention = CallingConvention.StdCall, EntryPoint = "GetSoftApActive")]
-    private static extern Boolean GetSoftApActive64(IntPtr o);
-
-    [DllImport(Dll32, CallingConvention = CallingConvention.StdCall, EntryPoint = "GetDeviceLocalMac")]
-    private static extern void GetDeviceLocalMac32(IntPtr o, IntPtr pMac);
-    [DllImport(Dll64, CallingConvention = CallingConvention.StdCall, EntryPoint = "GetDeviceLocalMac")]
-    private static extern void GetDeviceLocalMac64(IntPtr o, IntPtr pMac);
-
-    [DllImport(Dll32, CallingConvention = CallingConvention.StdCall, EntryPoint = "GetDeviceRemoteMac")]
-    private static extern void GetDeviceRemoteMac32(IntPtr o, IntPtr pMac);
-    [DllImport(Dll64, CallingConvention = CallingConvention.StdCall, EntryPoint = "GetDeviceRemoteMac")]
-    private static extern void GetDeviceRemoteMac64(IntPtr o, IntPtr pMac);
-    #endregion
-
-    #region Imported function wrappers
-    private static IntPtr CreateSoftAp(AP_EVENT OnStarted, AP_EVENT OnStopped, DEVICE_EVENT OnConnected,
-        DEVICE_EVENT OnDisconnected)
-    {
-        if (IntPtr.Size == 4)
-            return CreateSoftAp32(OnStarted, OnStopped, OnConnected, OnDisconnected);
-        return CreateSoftAp64(OnStarted, OnStopped, OnConnected, OnDisconnected);
-    }
-
-    private static void DestroySoftAp(IntPtr o)
-    {
-        if (IntPtr.Size == 4)
-            DestroySoftAp32(o);
-        DestroySoftAp64(o);
-    }
-
-    private static Int32 StartSoftAp(IntPtr o, String Ssid, String Passphrase)
-    {
-        if (IntPtr.Size == 4)
-            return StartSoftAp32(o, Ssid, Passphrase);
-        return StartSoftAp64(o, Ssid, Passphrase);
-    }
-
-    private static Int32 StopSoftAp(IntPtr o)
-    {
-        if (IntPtr.Size == 4)
-            return StopSoftAp32(o);
-        return StopSoftAp64(o);
-    }
+    #region GetSoftApPassphrase
+    [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+    [return: MarshalAs(UnmanagedType.I4)]
+    private static extern Int32 GetSoftApPassphrase(
+        [MarshalAs(UnmanagedType.SysInt), In] IntPtr o,
+        [MarshalAs(UnmanagedType.SysInt), In] IntPtr pPassphrase);
 
     private static Int32 GetSoftApPassphrase(IntPtr o, out String pPassphrase)
     {
         pPassphrase = "";
-
         IntPtr s = Marshal.AllocHGlobal(512);
         Int32 Res;
-        if (IntPtr.Size == 4)
-            Res = GetSoftApPassphrase32(o, s);
-        else
-            Res = GetSoftApPassphrase64(o, s);
-        if (Res == 0)
-            pPassphrase = Marshal.PtrToStringUni(s);
-        Marshal.FreeHGlobal(s);
-
+        try
+        {
+            Res = GetSoftApPassphrase(o, s);
+            if (Res == 0)
+                pPassphrase = Marshal.PtrToStringUni(s);
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(s);
+        }
         return Res;
     }
+    #endregion
+
+    #region GetSoftApSsid
+    [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+    [return: MarshalAs(UnmanagedType.I4)]
+    private static extern Int32 GetSoftApSsid(
+        [MarshalAs(UnmanagedType.SysInt), In] IntPtr o,
+        [MarshalAs(UnmanagedType.SysInt), In] IntPtr pSsid);
 
     private static Int32 GetSoftApSsid(IntPtr o, out String pSsid)
     {
         pSsid = "";
-
         IntPtr s = Marshal.AllocHGlobal(512);
         Int32 Res;
-        if (IntPtr.Size == 4)
-            Res = GetSoftApSsid32(o, s);
-        else
-            Res = GetSoftApSsid64(o, s);
-        if (Res == 0)
-            pSsid = Marshal.PtrToStringUni(s);
-        Marshal.FreeHGlobal(s);
-
+        try
+        {
+            Res = GetSoftApSsid(o, s);
+            if (Res == 0)
+                pSsid = Marshal.PtrToStringUni(s);
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(s);
+        }
         return Res;
     }
+    #endregion
 
-    private static Boolean GetSoftApActive(IntPtr o)
-    {
-        if (IntPtr.Size == 4)
-            return GetSoftApActive32(o);
-        return GetSoftApActive64(o);
-    }
+    #region GetDeviceLocalMac
+    [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+    private static extern void GetDeviceLocalMac(
+        [MarshalAs(UnmanagedType.SysInt), In] IntPtr o,
+        [MarshalAs(UnmanagedType.SysInt), In] IntPtr pMac);
 
     private static void GetDeviceLocalMac(IntPtr o, out String pMac)
     {
         pMac = "";
-
         IntPtr s = Marshal.AllocHGlobal(512);
-        if (IntPtr.Size == 4)
-            GetDeviceLocalMac32(o, s);
-        else
-            GetDeviceLocalMac64(o, s);
-        pMac = Marshal.PtrToStringUni(s);
-        Marshal.FreeHGlobal(s);
+        try
+        {
+            GetDeviceLocalMac(o, s);
+            pMac = Marshal.PtrToStringUni(s);
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(s);
+        }
     }
+    #endregion
+
+    #region GetDeviceRemoteMac
+    [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+    private static extern void GetDeviceRemoteMac(
+        [MarshalAs(UnmanagedType.SysInt), In] IntPtr o,
+        [MarshalAs(UnmanagedType.SysInt), In] IntPtr pMac);
 
     private static void GetDeviceRemoteMac(IntPtr o, out String pMac)
     {
         pMac = "";
-
         IntPtr s = Marshal.AllocHGlobal(512);
-        if (IntPtr.Size == 4)
-            GetDeviceRemoteMac32(o, s);
-        else
-            GetDeviceRemoteMac64(o, s);
-        pMac = Marshal.PtrToStringUni(s);
-        Marshal.FreeHGlobal(s);
+        try
+        {
+            GetDeviceRemoteMac(o, s);
+            pMac = Marshal.PtrToStringUni(s);
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(s);
+        }
     }
+    #endregion
     #endregion
 
     private IntPtr FAp;
@@ -175,6 +161,7 @@ internal class SoftAp
     private DEVICE_EVENT FDisconnectedCb;
     private AP_EVENT FStartedCb;
     private AP_EVENT FStoppedCb;
+    private List<IntPtr> FDevices;
 
     #region Event handlers
     private void DeviceConnected(IntPtr Ap, IntPtr Device)
@@ -183,6 +170,7 @@ internal class SoftAp
         GetDeviceLocalMac(Device, out LocalAddress);
         String RemoteAddress;
         GetDeviceRemoteMac(Device, out RemoteAddress);
+        FDevices.Add(Device);
 
         DoDeviceConnected(LocalAddress, RemoteAddress);
     }
@@ -193,18 +181,24 @@ internal class SoftAp
         GetDeviceLocalMac(Device, out LocalAddress);
         String RemoteAddress;
         GetDeviceRemoteMac(Device, out RemoteAddress);
+        FDevices.Remove(Device);
 
         DoDeviceDisconnected(LocalAddress, RemoteAddress);
     }
 
     private void ApStarted(IntPtr Ap)
     {
+        FDevices = new List<IntPtr>();
+
         DoStarted();
     }
 
     private void ApStopped(IntPtr Ap)
     {
         DoStopped();
+
+        FDevices.Clear();
+        FDevices = null;
     }
     #endregion
 
@@ -247,12 +241,15 @@ internal class SoftAp
     {
         Cleanup();
 
+        FDevices = null;
+
         OnStarted = null;
         OnStopped = null;
         OnDeviceConnected = null;
         OnDeviceDisconnected = null;
     }
 
+    #region Methods
     public void Start()
     {
         if (FAp == IntPtr.Zero)
@@ -299,6 +296,21 @@ internal class SoftAp
             }
         }
     }
+
+    public Boolean Disconnect(String RemoteMac)
+    {
+        if (FDevices == null)
+            return false;
+        foreach (IntPtr o in FDevices)
+        {
+            String Mac;
+            GetDeviceRemoteMac(o, out Mac);
+            if (Mac == RemoteMac)
+                return (DisconnectDevice(o) == 0);
+        }
+        return false;
+    }
+    #endregion
 
     #region Properties
     public String Ssid

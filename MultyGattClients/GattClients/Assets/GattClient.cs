@@ -1457,27 +1457,34 @@ public class GattClient : MonoBehaviour
 
     private void ClientChanged(System.Object sender, UInt16 Handle, Byte[] Value)
     {
-        Debug.Log("Chaned");
+        if (FConnections != null)
+        {
+            Debug.Log("Chaned");
+        }
     }
 
     private void ClientDisconnect(System.Object sender, Int32 Reason)
     {
         Debug.Log("Client disconnected with reason: 0x" + Reason.ToString("X8"));
-        // Remove client from the list.
-        FConnections.Remove(((GattClientThread)sender).Address);
+        if (FConnections != null)
+            // Remove client from the list.
+            FConnections.Remove(((GattClientThread)sender).Address);
     }
 
     private void ClientConnect(System.Object sender, Int32 Error)
     {
-        GattClientThread Client = (GattClientThread)sender;
-        if (Error != BluetoothErrors.WCL_E_SUCCESS)
+        if (FConnections != null)
         {
-            // If connection failed remove client from list
-            Debug.Log("Connect to " + Client.Address.ToString("X12") + " failed: 0x" + Error.ToString("X8"));
-            FConnections.Remove(Client.Address);
+            GattClientThread Client = (GattClientThread)sender;
+            if (Error != BluetoothErrors.WCL_E_SUCCESS)
+            {
+                // If connection failed remove client from list
+                Debug.Log("Connect to " + Client.Address.ToString("X12") + " failed: 0x" + Error.ToString("X8"));
+                FConnections.Remove(Client.Address);
+            }
+            else
+                Debug.Log("Client " + Client.Address.ToString("X12") + " connected");
         }
-        else
-            Debug.Log("Client " + Client.Address.ToString("X12") + " connected");
     }
 
     void Update()

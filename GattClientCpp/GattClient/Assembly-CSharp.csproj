@@ -53,7 +53,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\Scenes\GattClient.cs" />
+     <Compile Include="Assets\Scenes\GattClientDemo.cs" />
  <Reference Include="Unity.TextMeshPro.Editor">
  <HintPath>D:/Projects/Shared Projects/Windows/WCL for Unity/GattClientCpp/GattClient/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
  </Reference>

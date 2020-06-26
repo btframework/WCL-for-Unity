@@ -746,12 +746,12 @@ public class BluetoothManager : BluetoothImports
         return RadioRemoteUnpair(Radio, Address);
     }
 
-    public Int32 GetConnectable(out Boolean Connectable)
+    public Int32 GetConnectable(IntPtr Radio, out Boolean Connectable)
     {
         if (Disposed)
             throw new ObjectDisposedException(this.ToString());
 
-        return RadioIsConnectable(out Connectable)
+        return RadioIsConnectable(Radio, out Connectable)
     }
     #endregion
 
@@ -871,7 +871,7 @@ public struct GattDescriptors
     [MarshalAs(UnmanagedType.U1)]
     public Byte Count;
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 255)]
-    public GattDescriptor[] Chars[];
+    public GattDescriptor[] Descs;
 };
 
 public struct GattCharacteristicExtendedProperties
@@ -1031,6 +1031,13 @@ public class GattClient : BluetoothImports
         [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Client,
         [param: In] ref GattService Service,
         [param: In, Out] ref GattCharacteristics Chars);
+
+    [DllImport(WclGattClientDllName, CallingConvention = CallingConvention.StdCall)]
+    [return: MarshalAs(UnmanagedType.I4)]
+    private static extern Int32 GattClientGetDescriptors(
+        [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Client,
+        [param: In] ref GattCharacteristic Characteristic,
+        [param: In, Out] ref GattDescriptors Descriptors);
 
     [DllImport(WclGattClientDllName, CallingConvention = CallingConvention.StdCall)]
     [return: MarshalAs(UnmanagedType.I4)]
@@ -1196,6 +1203,17 @@ public class GattClient : BluetoothImports
         Chars.Chars = new GattCharacteristic[255];
 
         return GattClientGetCharas(FClient, ref Service, ref Chars);
+    }
+
+    public Int32 GetDescriptors(GattCharacteristic Char, out GattDescriptors Descs)
+    {
+        if (Disposed)
+            throw new ObjectDisposedException(this.ToString());
+
+        Descs = new GattDescriptors();
+        Descs.Count = 0;
+        Descs.Descs = new GattDescriptor[255];
+        return GattClientGetDescriptors(FClient, ref Char, ref Descs);
     }
 
     public Int32 Subscribe(GattCharacteristic Char)

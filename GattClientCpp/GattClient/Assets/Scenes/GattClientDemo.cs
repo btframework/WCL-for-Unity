@@ -1061,11 +1061,25 @@ public class GattClient : BluetoothImports
 
     [DllImport(WclGattClientDllName, CallingConvention = CallingConvention.StdCall)]
     [return: MarshalAs(UnmanagedType.I4)]
+    private static extern Int32 GattClientReadDescriptorValue(
+        [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Client,
+        [param: In] ref GattDescriptorc Desc,
+        [param: In, Out] ref GattDescriptorValue Value);
+
+    [DllImport(WclGattClientDllName, CallingConvention = CallingConvention.StdCall)]
+    [return: MarshalAs(UnmanagedType.I4)]
     private static extern Int32 GattClientWriteCharacteristicValue(
         [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Client,
         [param: In] ref GattCharacteristic Char,
         [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr pValue,
         [param: MarshalAs(UnmanagedType.U4), In] UInt32 Size);
+
+    [DllImport(WclGattClientDllName, CallingConvention = CallingConvention.StdCall)]
+    [return: MarshalAs(UnmanagedType.I4)]
+    private static extern Int32 GattClientWriteDescriptorValue(
+        [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Client,
+        [param: In] ref GattDescriptorc Desc,
+        [param: In] ref GattDescriptorValue Value);
 
     [DllImport(WclGattClientDllName, CallingConvention = CallingConvention.StdCall)]
     private static extern void GattClientFreeMem(
@@ -1249,6 +1263,23 @@ public class GattClient : BluetoothImports
             GattClientFreeMem(ppValue);
         }
         return Result;
+    }
+
+    public Int32 ReadDescriptorValue(GattDescriptor Desc, out GattDescriptorValue Value)
+    {
+        if (Disposed)
+            throw new ObjectDisposedException(this.ToString());
+
+        Value = new GattDescriptorValue();
+        return GattClientReadDescriptorValue(FClient, ref Char, ref Value);
+    }
+
+    public Int32 WriteDescriptorValue(GattDescriptor Desc, GattDescriptorValue Value)
+    {
+        if (Disposed)
+            throw new ObjectDisposedException(this.ToString());
+
+        return GattClientWriteDescriptorValue(FClient, ref Char, ref Value);
     }
 
     public Int32 WriteValue(GattCharacteristic Char, Byte[] Value)

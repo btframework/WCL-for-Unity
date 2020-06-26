@@ -569,8 +569,10 @@ public class BluetoothManager : BluetoothImports
         [param: MarshalAs(UnmanagedType.I8), In] Int64 Address);
 
     [DllImport(WclGattClientDllName, CallingConvention = CallingConvention.StdCall)]
-    private static extern WinVer GetWinVer(
-        [param: MarshalAs(UnmanagedType.U2), Out] out UInt16 Build);
+    [return: MarshalAs(UnmanagedType.I4)]
+    private static extern Int32 RadioIsConnectable(
+        [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Radio,
+        [param: MarshalAs(UnmanagedType.Bool), Out] out Boolean Connectable);
     #endregion
 
     // Bluetooth Manager instance.
@@ -744,9 +746,12 @@ public class BluetoothManager : BluetoothImports
         return RadioRemoteUnpair(Radio, Address);
     }
 
-    public static WinVer GetWindowsVersion(out UInt16 Build)
+    public Int32 GetConnectable(out Boolean Connectable)
     {
-        return GetWinVer(out Build);
+        if (Disposed)
+            throw new ObjectDisposedException(this.ToString());
+
+        return RadioIsConnectable(out Connectable)
     }
     #endregion
 
@@ -847,6 +852,71 @@ public struct GattCharacteristics
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 255)]
     public GattCharacteristic[] Chars;
 };
+
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct GattDescriptor
+{
+    [MarshalAs(UnmanagedType.U2)]
+    public UInt16 ServiceHandle;
+    [MarshalAs(UnmanagedType.U2)]
+    public UInt16 CharacteristicHandle;
+    public GattDescriptorType DescriptorType;
+    public GattUuid Uuid;
+    [MarshalAs(UnmanagedType.U2)]
+    public UInt16 Handle;
+};
+
+public struct GattDescriptors
+{
+    [MarshalAs(UnmanagedType.U1)]
+    public Byte Count;
+    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 255)]
+    public GattDescriptor[] Chars[];
+};
+
+public struct GattCharacteristicExtendedProperties
+{
+    [MarshalAs(UnmanagedType.Bool)]
+    public Boolean IsReliableWriteEnabled;
+    [MarshalAs(UnmanagedType.Bool)]
+    public Boolean IsAuxiliariesWritable;
+};
+
+public struct GattClientCharacteristicConfiguration
+{
+    [MarshalAs(UnmanagedType.Bool)]
+    public Boolean IsSubscribeToNotification;
+    [MarshalAs(UnmanagedType.Bool)]
+    public Boolean IsSubscribeToIndication;
+};
+
+public struct GattServerCharacteristicConfiguration
+{
+    [MarshalAs(UnmanagedType.Bool)]
+    public Boolean IsBroadcast;
+};
+
+public struct GattCharacteristicFormat
+{
+    [MarshalAs(UnmanagedType.U1)]
+    public Byte Format;
+    [MarshalAs(UnmanagedType.U1)]
+    public Byte Exponent;
+    public GattUuid AUnit;
+    [MarshalAs(UnmanagedType.U1)]
+    public Byte NameSpace;
+    public GattUuid Description;
+};
+
+public struct GattDescriptorValue
+{
+    public GattDescriptorType AType;
+    public GattUuid Uuid;
+    public GattCharacteristicExtendedProperties CharacteristicExtendedProperties;
+    public GattClientCharacteristicConfiguration ClientCharacteristicConfiguration;
+    public GattServerCharacteristicConfiguration ServerCharacteristicConfiguration;
+    public GattCharacteristicFormat CharacteristicFormat;
+};
 #endregion
 
 #region GATT Enumerations
@@ -872,6 +942,17 @@ public enum GattProtectionLevel
     plAuthentication,
     plEncryption,
     plEncryptionAndAuthentication
+};
+
+public enum GattDescriptorType
+{
+    dtCharacteristicExtendedProperties,
+    dtCharacteristicUserDescription,
+    dtClientCharacteristicConfiguration,
+    dtServerCharacteristicConfiguration,
+    dtCharacteristicFormat,
+    dtCharacteristicAggregateFormat,
+    dtCustomDescriptor
 };
 #endregion
 

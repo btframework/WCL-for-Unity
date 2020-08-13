@@ -751,7 +751,7 @@ public class BluetoothManager : BluetoothImports
         if (Disposed)
             throw new ObjectDisposedException(this.ToString());
 
-        return RadioIsConnectable(Radio, out Connectable)
+        return RadioIsConnectable(Radio, out Connectable);
     }
     #endregion
 
@@ -1063,7 +1063,7 @@ public class GattClient : BluetoothImports
     [return: MarshalAs(UnmanagedType.I4)]
     private static extern Int32 GattClientReadDescriptorValue(
         [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Client,
-        [param: In] ref GattDescriptorc Desc,
+        [param: In] ref GattDescriptor Desc,
         [param: In, Out] ref GattDescriptorValue Value);
 
     [DllImport(WclGattClientDllName, CallingConvention = CallingConvention.StdCall)]
@@ -1078,7 +1078,7 @@ public class GattClient : BluetoothImports
     [return: MarshalAs(UnmanagedType.I4)]
     private static extern Int32 GattClientWriteDescriptorValue(
         [param: MarshalAs(UnmanagedType.SysInt), In] IntPtr Client,
-        [param: In] ref GattDescriptorc Desc,
+        [param: In] ref GattDescriptor Desc,
         [param: In] ref GattDescriptorValue Value);
 
     [DllImport(WclGattClientDllName, CallingConvention = CallingConvention.StdCall)]
@@ -1271,7 +1271,7 @@ public class GattClient : BluetoothImports
             throw new ObjectDisposedException(this.ToString());
 
         Value = new GattDescriptorValue();
-        return GattClientReadDescriptorValue(FClient, ref Char, ref Value);
+        return GattClientReadDescriptorValue(FClient, ref Desc, ref Value);
     }
 
     public Int32 WriteDescriptorValue(GattDescriptor Desc, GattDescriptorValue Value)
@@ -1279,7 +1279,7 @@ public class GattClient : BluetoothImports
         if (Disposed)
             throw new ObjectDisposedException(this.ToString());
 
-        return GattClientWriteDescriptorValue(FClient, ref Char, ref Value);
+        return GattClientWriteDescriptorValue(FClient, ref Desc, ref Value);
     }
 
     public Int32 WriteValue(GattCharacteristic Char, Byte[] Value)

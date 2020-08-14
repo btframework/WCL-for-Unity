@@ -1363,12 +1363,12 @@ public class GattClientDemo : MonoBehaviour
 
                 for (int i = 0; i < FDevices.Count; i++)
                 {
-                    // Change this to your device's MAC
-                    if (FDevices[i].ToString("X12") == "103418080204")
+                    // Connect to first found device.
+                    Int32 Res = FClient.Connect(Radio, FDevices[i]);
+                    if (Res != BluetoothErrors.WCL_E_SUCCESS)
                     {
-                        Int32 Res = FClient.Connect(Radio, FDevices[i]);
-                        if (Res != BluetoothErrors.WCL_E_SUCCESS)
-                            Debug.Log("Failed to connect: 0x" + Res.ToString("X8"));
+                        Debug.Log("Failed to connect: 0x" + Res.ToString("X8"));
+                        break;
                     }
                 }
             }

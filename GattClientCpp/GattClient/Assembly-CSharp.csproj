@@ -248,9 +248,6 @@
  <Reference Include="Unity.Analytics.StandardEvents">
  <HintPath>D:/Projects/Shared Projects/Windows/WCL for Unity/GattClientCpp/GattClient/Library/PackageCache/com.unity.analytics@3.3.5/AnalyticsStandardEvents/Unity.Analytics.StandardEvents.dll</HintPath>
  </Reference>
- <Reference Include="UnityEngine.Purchasing">
- <HintPath>D:/Projects/Shared Projects/Windows/WCL for Unity/GattClientCpp/GattClient/Library/PackageCache/com.unity.purchasing@2.0.6/UnityEngine.Purchasing.dll</HintPath>
- </Reference>
  <Reference Include="netstandard">
  <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.2f1/Editor/Data/NetStandard/ref/2.0.0/netstandard.dll</HintPath>
  </Reference>
